@@ -2,6 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import prisma from './lib/prisma';
+import fieldRoutes from './routes/fieldRoutes';
+import cookieParser from 'cookie-parser';
 
 
 // config the dotenv file
@@ -18,6 +20,7 @@ const PORT= process.env.PORT || 3000
 // 3. Middleware to parse JSON bodies
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(cookieParser())
 
 
 // cors origins and  methods 
@@ -34,7 +37,8 @@ app.get('/', (req, res) => {
 // 5. Routes layer
 // 5.1. Auth routes
 app.use('/auth',authRoutes,)
-// 5.2. User routes
+// 5.2. Field routes
+app.use('/field', fieldRoutes)
 // 5.3. Season routes
 // 5.4. Episode routes
 // 5.5. Comment routes

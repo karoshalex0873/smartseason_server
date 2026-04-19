@@ -1,11 +1,11 @@
 // function to logou
 
 import { Response } from "express"
-import asynHandler from "../../middlewares/asyncHandler"
+import asyncHandler from "../../middlewares/asyncHandler"
 
 
 
-export const logout = asynHandler(
+export const logout = asyncHandler(
   async (req: any, res: Response) => {
     // Clear the access token cookie
     res.clearCookie('accessToken', {

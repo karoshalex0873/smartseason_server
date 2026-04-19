@@ -20,6 +20,12 @@ enum Stage {
   harvested
 }
 
+enum FieldStatus {
+  active
+  atRisk
+  completed
+}
+
 // Models
 //role
 model Role {
@@ -38,24 +44,52 @@ model User {
   name      String?
   password  String
   createdAt DateTime @default(now())
-  roleId    String
-  role      Role     @relation(fields: [roleId], references: [id])
+
+  // relation with role
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  // relation with field one user can have many fields
+  fields Field[]
+
+  // relation with field update one user can have many updates
+  updates FieldUpdate[]
 
   @@map("users")
 }
 
+// field
 model Field {
   id           String   @id @default(uuid())
   name         String
   cropType     String
   plantingDate DateTime
-  currentStage String
+  currentStage Stage
+  status       FieldStatus
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  agentId String //foreing key from the user table
+  agent   User   @relation(fields: [agentId], references: [id])
+
+  // relation with fieldUpdate one field can have many updates
+  updates FieldUpdate[]
+
+  @@map("fields")
 }
 
-
-model Crop {
+model FieldUpdate {
   id String @id @default(uuid())
-  name String
 
-  // time frame for status
+  fieldId String
+  field   Field  @relation(fields: [fieldId], references: [id])
+
+  agentId String
+  agent   User   @relation(fields: [agentId], references: [id])
+
+  stage     Stage
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@map("field_updates")
 }

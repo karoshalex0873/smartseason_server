@@ -1,13 +1,12 @@
 // signIn
 
 import prisma from "../../lib/prisma";
-import asynHandler from "../../middlewares/asyncHandler";
 import { Response, Request } from "express";
 import * as argon2 from "argon2"
-import jwt from "jsonwebtoken"
 import { generateToken } from "../../utils/generateToken";
+import asyncHandler from "../../middlewares/asyncHandler";
 
-export const signIn = asynHandler(
+export const signIn = asyncHandler(
   async (req: Request, res: Response) => {
     // 1. Get the user data from the request body
     const { email, password } = req.body

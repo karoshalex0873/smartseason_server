@@ -1,26 +1,24 @@
 import { Request, Response, NextFunction } from "express"
 import { UserRequest } from "../../utils/types"
-import asynHandler from "../asyncHandler"
-
-
-
-
+import asyncHandler from "../asyncHandler"
 
 const roleGuard = (allowedRoles: string[]) => {
-  asynHandler<void, UserRequest>(
+  return asyncHandler<void, UserRequest>(
     async (req: UserRequest, res: Response, next: NextFunction) => {
       if (!req.user || !allowedRoles.includes(req.user.role.name)) {
-        console.log(req.user?.role.name)
+        res.status(403).json({ message: "Forbidden" })
         return
       }
+
+      console.log(`User role: ${req.user.role.name}, Allowed roles: ${allowedRoles.join(", ")}`)
 
       next()
     }
   )
 }
 
-const adminGuard = roleGuard(['Admin'])
-const agentGuard = roleGuard(['Agent'])
-const adminOrAgentGuard = roleGuard(['Admin', 'Agent'])
+const admin = roleGuard(['Admin'])
+const agent = roleGuard(['Agent'])
+const adminOrAgent = roleGuard(['Admin', 'Agent'])
 
-export { adminGuard, agentGuard, adminOrAgentGuard }
+export { admin, agent, adminOrAgent }
