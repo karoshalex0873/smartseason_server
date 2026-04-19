@@ -35,7 +35,7 @@ export const addField = asyncHandler(
         name: name,
         cropType: cropType,
         plantingDate: new Date(plantingDate),
-        currentStage: 'ready',
+        currentStage: 'planted',
         status:'active',
         agent:{
           connect: { id: agentId }

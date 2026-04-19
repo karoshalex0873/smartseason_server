@@ -41,8 +41,23 @@ export const getFields = asyncHandler(
         include: {
           agent: {
             select: {
+              id: true,
               name: true,
               email: true
+            }
+          },
+          updates: {
+            orderBy: {
+              createdAt: 'desc'
+            },
+            include: {
+              agent: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
+              }
             }
           }
         }
@@ -60,8 +75,23 @@ export const getFields = asyncHandler(
         include: {
           agent: {
             select: {
+              id: true,
               name: true,
               email: true
+            }
+          },
+          updates: {
+            orderBy: {
+              createdAt: 'desc'
+            },
+            include: {
+              agent: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
+              }
             }
           }
         }
@@ -118,8 +148,23 @@ export const getFieldById = asyncHandler(
         include: {
           agent: {
             select: {
+              id: true,
               name: true,
               email: true
+            }
+          },
+          updates: {
+            orderBy: {
+              createdAt: 'desc'
+            },
+            include: {
+              agent: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
+              }
             }
           }
         }
@@ -144,8 +189,23 @@ export const getFieldById = asyncHandler(
         include: {
           agent: {
             select: {
+              id: true,
               name: true,
               email: true
+            }
+          },
+          updates: {
+            orderBy: {
+              createdAt: 'desc'
+            },
+            include: {
+              agent: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
+              }
             }
           }
         }

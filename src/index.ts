@@ -4,6 +4,7 @@ import authRoutes from './routes/authRoutes';
 import prisma from './lib/prisma';
 import fieldRoutes from './routes/fieldRoutes';
 import cookieParser from 'cookie-parser';
+import stageRoutes from './routes/stageRoutes';
 
 
 // config the dotenv file
@@ -39,7 +40,8 @@ app.get('/', (req, res) => {
 app.use('/auth',authRoutes,)
 // 5.2. Field routes
 app.use('/field', fieldRoutes)
-// 5.3. Season routes
+// 5.3. track status and stages routes
+app.use('/stage', stageRoutes)
 // 5.4. Episode routes
 // 5.5. Comment routes
 
