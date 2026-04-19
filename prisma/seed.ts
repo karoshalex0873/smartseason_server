@@ -4,7 +4,7 @@ import prisma from "../src/lib/prisma"
 async function seedRoles() {
   const roles = [
     { name: 'Admin' },
-    { name: 'Field Agent' },
+    { name: 'Agent' },
   ]
 
   for (const role of roles){

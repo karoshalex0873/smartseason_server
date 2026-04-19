@@ -12,6 +12,14 @@ datasource db {
   provider = "postgresql"
 }
 
+// enum for stages
+enum Stage {
+  planted
+  growing
+  ready
+  harvested
+}
+
 // Models
 //role
 model Role {
@@ -37,6 +45,17 @@ model User {
 }
 
 model Field {
+  id           String   @id @default(uuid())
+  name         String
+  cropType     String
+  plantingDate DateTime
+  currentStage String
+}
+
+
+model Crop {
   id String @id @default(uuid())
-  
+  name String
+
+  // time frame for status
 }
