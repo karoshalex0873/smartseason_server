@@ -35,3 +35,8 @@ model User {
 
   @@map("users")
 }
+
+model Field {
+  id String @id @default(uuid())
+  
+}
