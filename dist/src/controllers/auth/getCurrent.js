@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCurrentUser = void 0;
+exports.Roles = exports.getCurrentUser = void 0;
 const prisma_1 = __importDefault(require("../../lib/prisma"));
 const asyncHandler_1 = __importDefault(require("../../middlewares/asyncHandler"));
 exports.getCurrentUser = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -46,5 +46,15 @@ exports.getCurrentUser = (0, asyncHandler_1.default)((req, res) => __awaiter(voi
             email: currentUser.email,
             role: currentUser.role.name,
         }
+    });
+}));
+exports.Roles = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const roles = yield prisma_1.default.role.findMany();
+    res.status(200).json({
+        message: "Roles fetched successfully",
+        roles: roles.map(role => ({
+            id: role.id,
+            name: role.name,
+        }))
     });
 }));

@@ -18,4 +18,6 @@ router.post('/signin', signIn_1.signIn);
 router.post('/logout', logout_1.logout);
 // 4 current user route
 router.get('/current', protect_1.protect, getCurrent_1.getCurrentUser);
+// 5. route to get roles
+router.get('/roles', getCurrent_1.Roles);
 exports.default = router;
