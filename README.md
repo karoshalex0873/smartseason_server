@@ -20,6 +20,20 @@ The project uses:
 - `Prisma`
 - `PostgreSQL`
 
+## Environment Variables
+
+Create a `.env` file in the `server` folder. Example:
+
+```
+PORT=3000
+DATABASE_URL=postgresql://user:password@localhost:5432/smartseason
+CORS_ORIGINS=http://localhost:5173,https://smartseason-client.vercel.app
+```
+
+Notes:
+- Use a comma-separated list in `CORS_ORIGINS` to allow multiple frontend origins.
+- `CORS_ORIGIN` is also supported for single-origin setups.
+
 ## Business Logic
 
 ### 1. Users and Roles

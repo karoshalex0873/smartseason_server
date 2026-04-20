@@ -1,73 +1,79 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import authRoutes from './routes/authRoutes';
-import prisma from './lib/prisma';
-import fieldRoutes from './routes/fieldRoutes';
-import cookieParser from 'cookie-parser';
-import stageRoutes from './routes/stageRoutes';
-import cors from 'cors';
-import userRoutes from './routes/userRoutes';
+import express from 'express'
+import dotenv from 'dotenv'
+import cors from 'cors'
+import cookieParser from 'cookie-parser'
 
+import prisma from './lib/prisma'
+import authRoutes from './routes/authRoutes'
+import fieldRoutes from './routes/fieldRoutes'
+import stageRoutes from './routes/stageRoutes'
+import userRoutes from './routes/userRoutes'
 
-// config the dotenv file
+// Load env
 dotenv.config()
 
-
-// 1. Instance of express
 const app = express()
+const PORT = process.env.PORT || 3000
 
-// 2. Load port from .env file
-const PORT= process.env.PORT || 3000
+// Parse origins from .env
+const parseOrigins = (value?: string) =>
+  value
+    ?.split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean) || []
 
+const allowedOrigins = parseOrigins(process.env.CORS_ORIGINS)
 
-// 3. Middleware to parse JSON bodies
+// Debug (optional)
+console.log(' Allowed Origins:', allowedOrigins)
+
+// Middleware
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
+// CORS config
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow tools like Postman or server-to-server requests
+      if (!origin) return callback(null, true)
 
-// cors origins and  methods 
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  credentials: true,
-}))
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true)
+      }
 
+      return callback(new Error(`🙅‍♂️ CORS blocked: ${origin}`))
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true,
+  })
+)
 
-// 4. Api welcome to test
+//  Test route
 app.get('/', (req, res) => {
   res.status(200).json({
-    message: 'welcome to Smart Season API'
+    message: 'Welcome to Smart Season API',
   })
 })
 
-// 5. Routes layer
-// 5.1. Auth routes
-app.use('/auth',authRoutes,)
-// 5.2. Field routes
+//  Routes
+app.use('/auth', authRoutes)
 app.use('/field', fieldRoutes)
-// 5.3. track status and stages routes
 app.use('/stage', stageRoutes)
-// 5.4. User routes
 app.use('/users', userRoutes)
-// 5.4. Episode routes
-// 5.5. Comment routes
 
-// 6. Data base connection
-
-
-
-// 7. Start the server after the database connection succeeds
+// Start server after DB connects
 const startServer = async () => {
   try {
     await prisma.$connect()
-    console.log('Database connection established ')
+    console.log(' Database connected 🔥')
 
     app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`)
+      console.log(`🚀 Server running on port ${PORT} 😎`)
     })
   } catch (error) {
-    console.error('Failed to connect to the database. Server startup aborted.')
+    console.error('🙅‍♂️ Database connection failed')
     console.error(error)
     process.exit(1)
   }

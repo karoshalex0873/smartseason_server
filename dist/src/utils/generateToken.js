@@ -17,18 +17,20 @@ const generateToken = (res, userId) => {
     try {
         const accessToken = jsonwebtoken_1.default.sign({ userId }, jwt_secret, { expiresIn: "30min" });
         const refreshToken = jsonwebtoken_1.default.sign({ userId }, refreshSecret, { expiresIn: "7d" });
+        const isProduction = process.env.NODE_ENV === 'production';
+        const cookieSameSite = isProduction ? 'none' : 'strict';
         // Set the access token in an HTTP-only cookie
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-            sameSite: 'strict',
+            secure: isProduction,
+            sameSite: cookieSameSite,
             maxAge: 30 * 60 * 1000,
         });
         //  Set the refresh token in a cookie
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-            sameSite: 'strict',
+            secure: isProduction,
+            sameSite: cookieSameSite,
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
     }

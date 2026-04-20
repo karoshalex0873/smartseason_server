@@ -16,17 +16,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.logout = void 0;
 const asyncHandler_1 = __importDefault(require("../../middlewares/asyncHandler"));
 exports.logout = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieSameSite = isProduction ? 'none' : 'strict';
     // Clear the access token cookie
     res.clearCookie('accessToken', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
+        secure: isProduction,
+        sameSite: cookieSameSite
     });
     // Clear the refresh token cookie
     res.clearCookie('refreshToken', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
+        secure: isProduction,
+        sameSite: cookieSameSite
     });
     res.status(200).json({
         message: 'User logged out successfully'
