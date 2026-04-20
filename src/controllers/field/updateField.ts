@@ -22,6 +22,12 @@ export const updateField = asyncHandler(
     const { id } = req.params
     const { name, cropType, plantingDate, agentId } = req.body
 
+    if (!req.user) {
+      res.status(401).json({
+        message: 'Not authorized'
+      })
+      return
+    }
 
     // 2. Check if the field exists
     const existingField = await prisma.field.findUnique({
@@ -39,8 +45,26 @@ export const updateField = asyncHandler(
       })
       return
     }
+
+    const isAdmin = req.user.role.name === 'Admin'
+    const isAssignedAgent = req.user.role.name === 'Agent' && existingField.agentId === req.user.id
+
+    if (!isAdmin && !isAssignedAgent) {
+      res.status(403).json({
+        message: 'You are not authorized to update this field'
+      })
+      return
+    }
+
+    if (!isAdmin && agentId !== undefined) {
+      res.status(403).json({
+        message: 'Only admins can reassign fields'
+      })
+      return
+    }
+
     // 3. If agentId is provided, check the he is a field agent
-    if (agentId) {
+    if (agentId !== undefined && agentId !== '') {
       const assignedAgent = await prisma.user.findUnique({
         where: { id: agentId },
         include: { role: true }
@@ -67,11 +91,9 @@ export const updateField = asyncHandler(
         ...(name && { name }),
         ...(cropType && { cropType }),
         ...(plantingDate && { plantingDate: new Date(plantingDate) }),
-        ...(agentId && {
-          agent: {
-            connect: { id: agentId }
-          }
-        })
+        ...(agentId !== undefined
+          ? { agentId: agentId === '' ? null : agentId }
+          : {})
       },
       include: {
         agent: {

@@ -5,6 +5,8 @@ import prisma from './lib/prisma';
 import fieldRoutes from './routes/fieldRoutes';
 import cookieParser from 'cookie-parser';
 import stageRoutes from './routes/stageRoutes';
+import cors from 'cors';
+import userRoutes from './routes/userRoutes';
 
 
 // config the dotenv file
@@ -25,7 +27,11 @@ app.use(cookieParser())
 
 
 // cors origins and  methods 
-
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  credentials: true,
+}))
 
 
 // 4. Api welcome to test
@@ -42,6 +48,8 @@ app.use('/auth',authRoutes,)
 app.use('/field', fieldRoutes)
 // 5.3. track status and stages routes
 app.use('/stage', stageRoutes)
+// 5.4. User routes
+app.use('/users', userRoutes)
 // 5.4. Episode routes
 // 5.5. Comment routes
 

@@ -73,7 +73,7 @@ export const trackStage = asyncHandler(
       prisma.fieldUpdate.create({
         data: {
           fieldId: field.id,
-          agentId: field.agentId,
+          agentId: req.user!.id,
           stage,
           notes
         }

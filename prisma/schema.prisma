@@ -69,8 +69,8 @@ model Field {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  agentId String //foreing key from the user table
-  agent   User   @relation(fields: [agentId], references: [id])
+  agentId String? //foreing key from the user table
+  agent   User?   @relation(fields: [agentId], references: [id])
 
   // relation with fieldUpdate one field can have many updates
   updates FieldUpdate[]
