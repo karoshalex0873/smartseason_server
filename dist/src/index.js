@@ -24,7 +24,7 @@ const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 // Load env
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 // cors
 const parseOrigins = (value) => (value === null || value === void 0 ? void 0 : value.split(',').map(o => o.trim()).filter(Boolean)) || [];
 const allowedOrigins = parseOrigins(process.env.CORS_ORIGINS);
