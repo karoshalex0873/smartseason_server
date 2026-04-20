@@ -2,7 +2,7 @@ import express from 'express'
 import { signUp } from '../controllers/auth/signUp'
 import { signIn } from '../controllers/auth/signIn'
 import { logout } from '../controllers/auth/logout'
-import { getCurrentUser } from '../controllers/auth/getCurrent'
+import {Roles, getCurrentUser } from '../controllers/auth/getCurrent'
 import { protect } from '../middlewares/auth/protect'
 
 
@@ -21,6 +21,9 @@ router.post('/logout',logout)
 
 // 4 current user route
 router.get('/current', protect, getCurrentUser)
+
+// 5. route to get roles
+router.get('/roles', Roles)
 
 
 export default router

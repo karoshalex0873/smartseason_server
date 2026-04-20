@@ -43,3 +43,17 @@ export const getCurrentUser  = asyncHandler(
     })
   }
 )
+
+export const Roles = asyncHandler(
+  async( req:UserRequest, res:Response)=>{
+    const roles = await prisma.role.findMany()
+
+    res.status(200).json({
+      message: "Roles fetched successfully",
+      roles: roles.map(role => ({
+        id: role.id,
+        name: role.name,
+      }))
+    })
+  }
+)
