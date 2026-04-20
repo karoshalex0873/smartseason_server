@@ -25,53 +25,44 @@ const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
-// Parse origins from .env
-const parseOrigins = (value) => (value === null || value === void 0 ? void 0 : value.split(',').map((origin) => origin.trim()).filter(Boolean)) || [];
+// cors
+const parseOrigins = (value) => (value === null || value === void 0 ? void 0 : value.split(',').map(o => o.trim()).filter(Boolean)) || [];
 const allowedOrigins = parseOrigins(process.env.CORS_ORIGINS);
-// Debug (optional)
-console.log(' Allowed Origins:', allowedOrigins);
-// Middleware
+console.log('Allowed Origins:', allowedOrigins);
+// middlewares
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cookie_parser_1.default)());
-// CORS config
 app.use((0, cors_1.default)({
     origin: (origin, callback) => {
-        // Allow tools like Postman or server-to-server requests
         if (!origin)
             return callback(null, true);
         if (allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
-        return callback(new Error(`🙅‍♂️ CORS blocked: ${origin}`));
+        console.warn(`CORS blocked: ${origin}`);
+        return callback(null, false);
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
 }));
-//  Test route
-app.get('/', (req, res) => {
-    res.status(200).json({
-        message: 'Welcome to Smart Season API',
-    });
+// test route
+app.get('/', (_, res) => {
+    res.json({ message: 'SmartSeason API is running 🚀' });
 });
-//  Routes
+// routes
 app.use('/auth', authRoutes_1.default);
 app.use('/field', fieldRoutes_1.default);
 app.use('/stage', stageRoutes_1.default);
 app.use('/users', userRoutes_1.default);
-// Start server after DB connects
-const startServer = () => __awaiter(void 0, void 0, void 0, function* () {
+app.listen(PORT, () => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(`🚀 Server running on port ${PORT}`);
+    // DB connects AFTER server is alive (CRITICAL FIX)
     try {
         yield prisma_1.default.$connect();
-        console.log(' Database connected 🔥');
-        app.listen(PORT, () => {
-            console.log(`🚀 Server running on port ${PORT} 😎`);
-        });
+        console.log('🔥 Database connected');
     }
     catch (error) {
-        console.error('🙅‍♂️ Database connection failed');
-        console.error(error);
-        process.exit(1);
+        console.error('❌ DB connection failed (non-fatal):', error);
     }
-});
-void startServer();
+}));

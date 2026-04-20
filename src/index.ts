@@ -2,8 +2,8 @@ import express from 'express'
 import dotenv from 'dotenv'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
-
 import prisma from './lib/prisma'
+
 import authRoutes from './routes/authRoutes'
 import fieldRoutes from './routes/fieldRoutes'
 import stageRoutes from './routes/stageRoutes'
@@ -13,70 +13,58 @@ import userRoutes from './routes/userRoutes'
 dotenv.config()
 
 const app = express()
+
 const PORT = process.env.PORT || 3000
 
-// Parse origins from .env
+// cors
 const parseOrigins = (value?: string) =>
-  value
-    ?.split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean) || []
+  value?.split(',').map(o => o.trim()).filter(Boolean) || []
 
 const allowedOrigins = parseOrigins(process.env.CORS_ORIGINS)
 
-// Debug (optional)
-console.log(' Allowed Origins:', allowedOrigins)
+console.log('Allowed Origins:', allowedOrigins)
 
-// Middleware
+// middlewares
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
-// CORS config
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow tools like Postman or server-to-server requests
       if (!origin) return callback(null, true)
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true)
       }
 
-      return callback(new Error(`🙅‍♂️ CORS blocked: ${origin}`))
+      console.warn(`CORS blocked: ${origin}`)
+      return callback(null, false)
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   })
 )
-
-//  Test route
-app.get('/', (req, res) => {
-  res.status(200).json({
-    message: 'Welcome to Smart Season API',
-  })
+// test route
+app.get('/', (_, res) => {
+  res.json({ message: 'SmartSeason API is running 🚀' })
 })
 
-//  Routes
+// routes
 app.use('/auth', authRoutes)
 app.use('/field', fieldRoutes)
 app.use('/stage', stageRoutes)
 app.use('/users', userRoutes)
 
-// Start server after DB connects
-const startServer = async () => {
+
+app.listen(PORT, async () => {
+  console.log(`🚀 Server running on port ${PORT}`)
+
+  // DB connects AFTER server is alive (CRITICAL FIX)
   try {
     await prisma.$connect()
-    console.log(' Database connected 🔥')
-
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT} 😎`)
-    })
+    console.log('🔥 Database connected')
   } catch (error) {
-    console.error('🙅‍♂️ Database connection failed')
-    console.error(error)
-    process.exit(1)
+    console.error('❌ DB connection failed (non-fatal):', error)
   }
-}
-
-void startServer()
+})
