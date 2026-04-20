@@ -11,6 +11,14 @@ const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
     throw new Error('DATABASE_URL is missing. Add it to your .env file before starting the server.');
 }
-const adapter = new adapter_pg_1.PrismaPg({ connectionString });
+const databaseUrl = new URL(connectionString);
+const isLocalDatabase = ['localhost', '127.0.0.1'].includes(databaseUrl.hostname);
+const poolConfig = {
+    connectionString,
+};
+if (!isLocalDatabase) {
+    poolConfig.ssl = { rejectUnauthorized: false };
+}
+const adapter = new adapter_pg_1.PrismaPg(poolConfig);
 const prisma = new client_1.PrismaClient({ adapter });
 exports.default = prisma;

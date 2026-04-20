@@ -13,7 +13,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const prisma_1 = __importDefault(require("../src/lib/prisma"));
-// function to seed the roles
+// Seed small reference data without transactional helpers because
+// some hosted Postgres connections can close when Prisma starts them.
 function seedRoles() {
     return __awaiter(this, void 0, void 0, function* () {
         const roles = [
@@ -21,11 +22,14 @@ function seedRoles() {
             { name: 'Agent' },
         ];
         for (const role of roles) {
-            yield prisma_1.default.role.upsert({
+            const existingRole = yield prisma_1.default.role.findUnique({
                 where: { name: role.name },
-                update: {},
-                create: role
             });
+            if (!existingRole) {
+                yield prisma_1.default.role.create({
+                    data: role,
+                });
+            }
         }
     });
 }
