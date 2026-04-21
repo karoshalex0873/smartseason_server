@@ -1,294 +1,172 @@
-# SmartSeason Backend
+# SmartSeason Field Monitoring System
 
-Backend API for the SmartSeason Field Monitoring System.
+Live App: https://smartseason-client.vercel.app/  
+API: https://smartseason-server.onrender.com/
+
+Frontend Repository: https://github.com/karoshalex0873/smartseason_client  
+Backend Repository: https://github.com/karoshalex0873/smartseason_server  .
 
 ## Overview
+SmartSeason is a field monitoring system designed to help agricultural teams track crop progress, manage field assignments, and monitor risk levels in real time.
 
-This backend supports:
+The system enables:
+- Admin to mange fields, users and asiign agents to fields.
+- Agent to update progress and observation on assigned fields.
+- Automatic status update (Active ,At Risk, Completed) based on the data 
 
-- authentication for `Admin` and `Agent` users
-- field creation, assignment, update, read, and deletion
-- field stage tracking with notes
-- automatic field status computation
-- role-based access control for all protected routes
+## System Architecture
 
-The project uses:
+- **Frontend:** React (Vite)
+- **Backend:** Node.js (Express, TypeScript)
+- **Database:** PostgreSQL
+- **ORM:** Prisma
+- **Authentication:** HTTP-only cookies with JWT
 
-- `Node.js`
-- `Express`
-- `TypeScript`
-- `Prisma`
-- `PostgreSQL`
+The frontend communicates with the backend via REST APIs.  
+The backend handles business logic, authentication, and database operations.
 
-## Environment Variables
 
-Create a `.env` file in the `server` folder. Example:
+## Demo Credentials
+-Note: the first login may take a moment due to slow sever for free tier hosting. Please be patient when testing the demo.
 
-```
-PORT=3000
-DATABASE_URL=postgresql://user:password@localhost:5432/smartseason
-CORS_ORIGINS=http://localhost:5173,https://smartseason-client.vercel.app
-```
+- Admin: `
+Email:admin@smartseason.com
+Password: StrongPass1`
+- Agent 1: `
+Email:agent001@smartseason.com
+Password: password123 `
 
-Notes:
-- Use a comma-separated list in `CORS_ORIGINS` to allow multiple frontend origins.
-- `CORS_ORIGIN` is also supported for single-origin setups.
+- Agent 2: `
+Email:jamal@smartseason.com
+Password: password123`
 
-## Business Logic
 
-### 1. Users and Roles
+## User Flow
+### Admin
+- Logs in and is redirected to the admin dashboard.
+- Create fields and assign them to agents.
+- Create agent users and assign them to fields.
+- Monitor field summaries and risk levels.
 
-The system supports two roles:
+### Agent
+- Logs in and is redirected to the agent dashboard.
+- Views assigned fields and their current status.
+- Updates field progress and adds notes.
+- Views field details and update history.
 
-- `Admin`
-- `Agent`
 
-Role records are seeded into the database and each user belongs to one role.
+## Field Status Logic
 
-Authentication is cookie-based:
+Field status is automatically computed based on stage and time:
 
-- on sign in, the backend generates an `accessToken` and `refreshToken`
-- tokens are stored in `httpOnly` cookies
-- protected routes use the `protect` middleware to verify the token and attach the authenticated user to `req.user`
+- harvested → completed  
+- planted > 14 days → atRisk  
+- growing > 90 days → atRisk  
+- ready > 120 days → atRisk  
+- otherwise → active 
 
-### 2. Access Control
 
-Authorization is handled in two layers:
-
-- `protect` middleware verifies the logged-in user
-- `roleGuard` middleware checks allowed roles  `admin`, `agent`, or `adminOrAgent`
-
-For data ownership, some checks are enforced inside controllers:
-
-- `Admin` can access all fields
-- `Agent` can only access fields assigned to them
-- `Agent` can only track stage progress for fields assigned to them
-
-This keeps role checks and ownership checks separate.
-
-### 3. Field Management
-
-The `Field` model stores the current state of a field:
-
-- `name`
-- `cropType`
-- `plantingDate`
-- `currentStage`
-- `status`
-- `agentId`
-
-Field management is separated from progress tracking:
-
-- field CRUD handles metadata like name, crop type, planting date, and assigned agent
-- stage tracking handles crop progress updates and notes
-
-This separation keeps responsibilities clear and avoids mixing business concerns.
-
-### 4. Field Assignment
-
-Each field is assigned to exactly one agent:
-
-- one `User` can have many assigned fields
-- one `Field` belongs to one assigned agent
-
-When creating or updating a field, the backend validates that the selected user is actually an `Agent`.
-
-### 5. Stage Tracking
-
-Field progress is tracked through the `FieldUpdate` model.
-
-Each update stores:
-
-- the field being updated
-- the user who made the update
-- the new stage
-- optional notes
-- timestamp
-
-This means:
-
-- `Field` stores the latest snapshot
-- `FieldUpdate` stores the history of progress changes
-
-That design helps admins monitor updates across agents and keeps the system auditable.
-
-### 6. Field Stages
-
-The field lifecycle is represented with the `Stage` enum:
-
-- `planted`
-- `growing`
-- `ready`
-- `harvested`
-
-These stages are used both in the current field snapshot and in update history.
-
-
-### 7. Automatic Status Computation
-
-Field status is not updated manually. It is computed automatically in the status service found in `src/services/statusCompute.ts`.
-
-The system uses three field status values:
-
-- `active`
-- `atRisk`
-- `completed`
-
-#### What the system is monitoring
-
-The system is monitoring whether a field is progressing through its crop lifecycle within a reasonable amount of time.
-
-In this project, the main signs being monitored are:
-
-- the field's current stage
-- the field's planting date
-- the amount of time that has passed since planting
-
-This means the backend is not just checking what stage the field is in, but also checking whether the field may be taking too long to remain in that stage.
-
-The goal is to identify delays in crop progress early enough so the field can be flagged for attention.
-
-#### How the system determines status
-
-The status is computed by comparing the field's current stage with the number of days that have passed since the planting date.
-
-The logic works in this order:
-
-1. If the field stage is `harvested`, the system marks the field as `completed`.
-2. If the field is not harvested, the system calculates how many days have passed since planting.
-3. The system then checks whether that number of days is still reasonable for the current stage.
-4. If the field has taken too long in that stage, it is marked as `atRisk`.
-5. If the timing is still within the expected range, it is marked as `active`.
-
-#### Why this approach was used
-
-This approach was chosen because the assessment requires a computed status, and the data already available in the system is enough to make a reasonable first decision.
-
-The system already stores:
-- planting date
-- current stage
-
-Using these two values makes it possible to monitor delay in field progress without needing additional complex data such as weather patterns, pest reports, or soil analysis.
-
-In simple terms:
-
-- `active` means the field is progressing normally
-- `atRisk` means the field appears delayed and may need human attention
-- `completed` means the crop lifecycle has reached harvest
-
-This gives a simple and practical business rule that is easy to explain, easy to maintain, and easy to improve later.
-
-### 8. Monitoring Logic
-
-Admins can monitor updates across agents by reading fields together with their update history.
-
-The field read endpoints include:
-
-- assigned agent details
-- ordered update history
-- update author information
-
-This supports visibility into:
-
-- who updated a field
-- when it was updated
-- what stage was reported
-- any notes attached to the update
-
-## API Structure
-
-### Auth Routes
-
-Mounted at `/auth`
-
-- `POST /auth/signup`
-- `POST /auth/signin`
-- `POST /auth/logout`
-
-### Field Routes
-
-Mounted at `/field`
-
-- `GET /field`
-- `GET /field/:id`
-- `POST /field/add`
-- `PATCH /field/update/:id`
-
-### Stage Routes
-
-Mounted at `/stage`
-
-- `POST /stage/track/:id`
-
-## Database Design
-
-Main models:
-
-- `Role`
-- `User`
-- `Field`
-- `FieldUpdate`
-
-Relationship summary:
-
-- one role has many users
-- one user has many fields
-- one user has many field updates
-- one field has many updates
-
-This gives a clean structure for both operational data and update history.
-
+## Design Decisions
+- Authentication uses HTTP-only cookies to enhance security by preventing client-side access to tokens.
+- Authorization is handled through a combination of authentication checks and role-based guards to ensure proper access control.
+- The `Field` model captures the current state of a field, while `FieldUpdate` records historical progress, allowing for a clear separation of concerns.
+- Field status is determined by backend business rules based on stage and time, ensuring consistent and accurate monitoring without relying on client-side calculations.
+- Admin and Agent Roles are seede and enfored by the backend
+- Separion of concerns approach
 ## Setup
 
-### 1. Install dependencies
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/karoshalex0873/smartseason_server.git
+cd SmartSeason/server
+```
+
+### 2. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Configure environment variables
+### 3. Create the environment file
 
-Create a `.env` file with values such as:
+Create `server/.env` with values like:
 
 ```env
 PORT=3000
-DATABASE_URL=postgresql://postgres:password@localhost:5432/smartseason
+DATABASE_URL=postgresql://username:password@localhost:5432/smartseason
 JWT_SECRET=your_jwt_secret
 REFRESH_TOKEN_SECRET=your_refresh_token_secret
+CORS_ORIGINS=http://localhost:5173
 NODE_ENV=development
 ```
 
-### 3. Run migrations
+### 4. Generate the Prisma client
+
 
 ```bash
-node ./node_modules/prisma/build/index.js migrate dev
+npx prisma generate
 ```
 
-### 4. Seed roles
+### 5. Run migrations in development
+
+```bash
+npx prisma migrate dev
+```
+
+### 6. Seed the database
 
 ```bash
 npm run seed
 ```
 
-### 5. Start the development server
+### 7. Start the development server
 
 ```bash
 npm run dev
 ```
 
+## Running Scripts
+
+- `npm run dev`: starts the backend in development mode with auto-reload
+- `npm run build`: compiles TypeScript to `dist`
+- `npm start`: runs the compiled production build
+- `npm run seed`: runs the Prisma seed script
+
+## Design Decisions
+
+- Authentication is cookie-based using HTTP-only tokens so the client does not manage raw auth tokens directly.
+- Authorization is split into authentication and role checks:
+  `protect` verifies the signed-in user, then role guards handle `Admin`, `Agent`, or shared access.
+- `Field` stores the current snapshot of a field, while `FieldUpdate` stores historical progress entries.
+- Field metadata management and progress tracking are separate concerns:
+  admins manage field records, while agents mainly record stage updates and notes.
+- Field status is computed automatically instead of being entered manually.
+  The application uses the current stage and the number of days since planting to decide the status.
+  If the stage is `harvested`, the field is marked `completed`.
+  Otherwise the system compares the days since planting against the allowed threshold for the current stage:
+  `planted` = 14 days, `growing` = 90 days, `ready` = 120 days.
+  If the field stays longer than the threshold for its current stage, it is marked `atRisk`.
+  If it is still within the allowed time, it remains `active`.
+- Roles are treated as reference data and are seeded into the database.
+
 ## Assumptions
 
-- a field is assigned to one agent at a time
-- admins can view all fields and all updates
-- agents can only access their assigned fields
-- field metadata updates are separate from progress tracking
-- status is computed from stage and timing rules, not entered manually
+- The application has two roles only: `Admin` and `Agent`.
+- A field is assigned to at most one agent at a time.
+- Admins can view and manage all fields and users.
+- Agents can access only the fields assigned to them.
+- Agents can record field progress for their assigned fields.
+- Stage flow follows the defined lifecycle:
+  `planted`, `growing`, `ready`, `harvested`.
+- Status is determined by the business rules already defined in the application:
+  `harvested` always becomes `completed`, stages that exceed their allowed age become `atRisk`, and all other fields remain `active`.
+-  `harvested -> completed`
+-  `planted over 14 days -> atRisk`
+- `growing over 90 days -> atRisk`
+- `ready over 120 days -> atRisk`
+- `otherwise -> active`
 
-## Future Improvements
-
-- dashboard summary endpoints for totals and status breakdowns
-- pagination and filtering for fields and updates
-- validation layer with a schema library
-- refresh token rotation
-- tests for business logic and route authorization
-- configurable crop-specific timing thresholds
+- The current stage and planting date are enough input for the first version of status monitoring.
+  The system does not use weather, soil, pest, or crop-specific external data yet.
+- The database used in development is available before running Prisma commands.
